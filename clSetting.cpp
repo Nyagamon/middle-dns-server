@@ -94,28 +94,26 @@ bool clSetting::load(const char *path){
 		else if(strcmp(key,"ipv6")==0)_ipv6=strcmp(value,"true")==0;
 		else if(strcmp(key,"allow_ipv4")==0){
 			s=strstr(value,"/");if(s)*(s++)='\0';
-			unsigned int ip=0;
-			while(true){
-				ip|=atoi(s)&0xFF;
+			*(unsigned int *)_allow_ipv4_mask=0xFFFFFFFF>>(s?32-atoi(s):0);
+			s=value;
+			for(int i=0;i<4;++i){
+				_allow_ipv4[i]=atoi(s);
 				s=strstr(s,".");
 				if(!s)break;
 				++s;
-				ip<<=8;
 			}
-			*(unsigned int *)_allow_ipv4=ip;
-			*(unsigned int *)_allow_ipv4_mask=0xFFFFFFFF<<(s?32-atoi(s):0);
 		}
 		else if(strcmp(key,"allow_ipv6")==0){
 			s=strstr(value,"/");if(s)*(s++)='\0';
 			for(int i=0,v=s?atoi(s):128;i<16;++i,v-=8){
-				_allow_ipv6_mask[i]=(v>=8)?0xFF:(v<=0)?0x00:0xFF>>(8-v);
+				_allow_ipv6_mask[i]=(v>=8)?0xFF:(v<=0)?0x00:0xFF<<(8-v);
 			}
 			//¦‚±‚Ì‚â‚è•û‚¾‚ÆA::‚ðŽg‚Á‚½‚Æ‚«‚ÉÅŒã‚ª‚¨‚©‚µ‚­‚È‚é
 			memset(_allow_ipv6,0,sizeof(_allow_ipv6));
 			s=value;
 			for(int i=0;i<16;){
 				int v=atoi16(s);
-				_allow_ipv6[i++]=v&0xFF;v>>=8;
+				_allow_ipv6[i++]=(v>>8)&0xFF;
 				_allow_ipv6[i++]=v&0xFF;
 				s=strstr(s,".");
 				if(!s)break;
