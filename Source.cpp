@@ -62,6 +62,19 @@ bool check_ip(const unsigned char *ip,const unsigned char *allow,const unsigned 
 };
 
 //
+//
+//
+int netmask2cidr(const unsigned char *mask,int size){
+	int n=0;
+	for(int i=0;i<size;++i){
+		for(int j=0x80;j>0;j>>=1){
+			if(!(mask[i]&j))break;
+			++n;
+		}
+	}
+	return n;
+};
+//
 // DNSパケット解析
 //
 unsigned int dns_analysis(unsigned char *data,unsigned int size,unsigned int max_size){
@@ -232,6 +245,12 @@ int main(void){
 			ipv4.S_un.S_un_b.s_b3,
 			ipv4.S_un.S_un_b.s_b4,
 			hostname);
+		printf("アクセス許可: %d.%d.%d.%d/%d\n",
+			setting.allow_ipv4()[0],
+			setting.allow_ipv4()[1],
+			setting.allow_ipv4()[2],
+			setting.allow_ipv4()[3],
+			netmask2cidr(setting.allow_ipv4_mask(),4));
 		printf("許可ドメインTTL: %d 秒\n",setting.allow_ttl());
 		printf("拒否ドメインTTL: %d 秒\n",setting.block_ttl());
 		printf("\n");
@@ -329,6 +348,13 @@ int main(void){
 			htons(ipv6.u.Word[4]),htons(ipv6.u.Word[5]),
 			htons(ipv6.u.Word[6]),htons(ipv6.u.Word[7]),
 			hostname);
+		IN6_ADDR *mask=(IN6_ADDR *)setting.allow_ipv6();
+		printf("アクセス許可: %x.%x.%x.%x.%x.%x.%x.%x/%d\n",
+			htons(mask->u.Word[0]),htons(mask->u.Word[1]),
+			htons(mask->u.Word[2]),htons(mask->u.Word[3]),
+			htons(mask->u.Word[4]),htons(mask->u.Word[5]),
+			htons(mask->u.Word[6]),htons(mask->u.Word[7]),
+			netmask2cidr(setting.allow_ipv6_mask(),6));
 		printf("許可ドメインTTL: %d 秒\n",setting.allow_ttl());
 		printf("拒否ドメインTTL: %d 秒\n",setting.block_ttl());
 		printf("\n");
